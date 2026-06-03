@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SisAIH-02 (Central Unificada)</title>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    :root {
+      --blue-50: #f4f8fc; --blue-100: #e6eef7; --blue-200: #c9dcee; --blue-300: #9dbfdf; --blue-400: #6a9bca;
+      --blue-500: #3f7ab5; --blue-600: #2a609a; --blue-700: #1f4a7a; --blue-800: #16385e; --blue-900: #0f2747;
+      --ink: #16243a; --muted: #5b6b82; --line: #dde6f1; --bg: #f7fafd; --card: #ffffff;
+      --ok: #1f8a55; --warn: #b3690b; --danger: #b03a3a; --purple: #6a3fb5; 
+      --teal: #0d9488; --orange: #ea580c; --brown: #78350f;
+      --shadow: 0 1px 2px rgba(15, 39, 71, .06), 0 6px 18px rgba(15, 39, 71, .06);
+      --radius: 8px; --font: "Segoe UI", -apple-system, Inter, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 14px; }
+    .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+    
+    aside { background: linear-gradient(180deg, var(--blue-800), var(--blue-900)); color: #dbe7f5; padding: 18px 14px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; }
+    aside .brand { display: flex; align-items: center; gap: 12px; padding: 6px 8px 24px; border-bottom: 1px solid rgba(255, 255, 255, .08); margin-bottom: 18px; }
+    aside .brand .logo { width: 38px; height: 38px; border-radius: 8px; background: linear-gradient(135deg, var(--blue-400), var(--blue-200)); display: grid; place-items: center; color: var(--blue-900); font-weight: 700; font-size: 18px; }
+    nav button { display: flex; align-items: center; gap: 12px; width: 100%; background: transparent; border: 0; color: #cfdcec; text-align: left; padding: 12px 14px; border-radius: var(--radius); cursor: pointer; transition: all 0.2s; font-size: 13px;}
+    nav button:hover { background: rgba(255, 255, 255, .06); }
+    nav button.active { background: linear-gradient(180deg, #27598c, #1c456e); color: #fff; font-weight: 500; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06); }
+    nav .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--blue-400); margin: 16px 0 8px 14px; font-weight: 700;}
+    
+    main { padding: 24px 32px 60px; max-width: 1366px; margin: 0 auto; width: 100%; }
+    header.top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    header.top h1 { font-size: 22px; margin: 0; font-weight: 600; }
+    
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px;}
+    .card .hd { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+    .card .hd h3 { margin: 0; font-size: 15px; display: flex; align-items: center; gap: 8px;}
+    .card .bd { padding: 20px; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .row { display: grid; gap: 16px; grid-template-columns: repeat(4, 1fr); margin-bottom: 20px; }
+    
+    .kpi { padding: 16px 20px; position: relative; overflow: hidden;}
+    .kpi::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--blue-400); }
+    .kpi.danger::before { background: var(--danger); }
+    .kpi.ok::before { background: var(--ok); }
+    .kpi.warn::before { background: var(--warn); }
+    .kpi.purple::before { background: var(--purple); }
+    .kpi .val { font-size: 26px; font-weight: 600; margin-top: 6px; color: var(--blue-800); }
+    .kpi .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600;}
+    
+    .btn { display: inline-flex; align-items: center; gap: 8px; justify-content: center; padding: 10px 16px; border-radius: 6px; border: 1px solid var(--blue-200); background: #fff; cursor: pointer; font-size: 13px; font-weight: 500; transition: .2s;}
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn.primary { background: var(--blue-600); color: #fff; border-color: var(--blue-600); }
+    .btn.primary:hover:not(:disabled) { background: var(--blue-700); }
+    
+    .table-container { border: 1px solid var(--line); border-radius: var(--radius); overflow: auto; max-height: 500px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;}
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+    th { background: var(--blue-50); font-weight: 600; color: var(--blue-800); position: sticky; top: 0;}
+    
+    input, select { padding: 10px 12px; border: 1px solid var(--blue-200); border-radius: 6px; font-size: 13px; font-family: inherit; width: 100%; outline: none;}
+    input:focus, select:focus { border-color: var(--blue-500); box-shadow: 0 0 0 3px var(--blue-100); }
+
+    /* Tags para as 8 Regras */
+    .tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap;}
+    .tag.r1 { background: #fbe7e7; color: var(--danger); } 
+    .tag.r2 { background: #e8f0fb; color: var(--blue-700); }
+    .tag.r3 { background: #fdf2e0; color: var(--warn); }
+    .tag.r4 { background: #f0e7fb; color: var(--purple); } 
+    .tag.r5 { background: #e0f2fe; color: var(--teal); } 
+    .tag.r6 { background: #ffedd5; color: var(--orange); } 
+    .tag.r7 { background: #fce7f3; color: #be185d; } 
+    .tag.r8 { background: #fef3c7; color: var(--brown); } 
+    .tag.ok { background: #e8f5ee; color: var(--ok); }
+    
+    .rule-item { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 12px; background: #fff;}
+    
+    .modal-bk { position: fixed; inset: 0; background: rgba(15, 39, 71, .45); display: none; align-items: center; justify-content: center; z-index: 50; }
+    .modal-bk.on { display: flex; }
+    .modal { background: #fff; border-radius: 12px; width: min(820px, 94vw); max-height: 90vh; overflow: auto; padding: 0;}
+    .modal .hd { padding: 18px 24px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between;}
+    .modal .bd { padding: 24px; }
+    .kvgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+    .kv { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+    
+    .hidden { display: none !important; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; background: var(--blue-100); color: var(--blue-700); border: 1px solid var(--blue-200); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+
+    .alert-box { padding: 14px 16px; border-radius: 10px; border: 1px solid var(--line); margin-bottom: 16px; background: #fef3c7; color: #92400e; font-size: 13px; }
+    .alert-box.ok { background: #ecfdf5; border-color: #a7f3d0; color: #134e4a; }
+    .alert-box.warn { background: #fef3c1; border-color: #fcd34d; color: #92400e; }
+    .alert-box.danger { background: #fee2e2; border-color: #fecaca; color: #991b1b; }
+    
+    .toast { position: fixed; right: 24px; bottom: 24px; background: var(--blue-900); color: #fff; padding: 12px 20px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1000; display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(15px); transition: .3s;}
+    .toast.on { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- BARRA LATERAL -->
+    <aside>
+      <div class="brand">
+        <div class="logo"><i class="ph-fill ph-heartbeat"></i></div>
+        <div><b>SisAIH-02 <span style="color:var(--blue-300); font-size:10px;">PRO</span></b><small>Plataforma Unificada</small></div>
+      </div>
+      <nav id="nav">
+        <div class="section-title">Engenharia de Dados</div>
+        <button data-view="mod1" class="active"><i class="ph ph-globe"></i> Módulo 1: Scraper CNES</button>
+        <button data-view="mod2"><i class="ph ph-database"></i> Módulo 2: ETL SIGTAP</button>
+        <button data-view="mod3"><i class="ph ph-shield-check"></i> Módulo 3: Gerar Perfil</button>
+        <button data-view="mod4"><i class="ph ph-arrow-down"></i> Módulo 4: ETL SISAIH</button>
+        
+        <div class="section-title">Auditoria (Motor 8 Regras)</div>
+        <button data-view="dash"><i class="ph ph-chart-line-up"></i> Visão Gerencial</button>
+        <button data-view="aih"><i class="ph ph-list-magnifying-glass"></i> Fila de AIHs (Auditada)</button>
+        <button data-view="rules"><i class="ph ph-cpu"></i> Motor de Regras (PDF)</button>
+      </nav>
+    </aside>
+
+    <main>
+      <header class="top">
+        <h1 id="title">Módulo 1: Extração CNES</h1>
+        <div class="pill"><i class="ph-fill ph-check-circle"></i> Conectado ao FastAPI</div>
+      </header>
+
+      <!-- MÓDULO 1: SCRAPER -->
+      <section id="view-mod1">
+        <div class="card">
+          <div class="hd"><h3><i class="ph-fill ph-globe"></i> Robô de Raspagem (Selenium)</h3></div>
+          <div class="bd">
+            <p style="margin-bottom: 20px;">Insira o número do CNES. O Python irá abrir o navegador em background, varrer o portal e baixar Instalações, Serviços e Habilitações para a pasta local.</p>
+            <div style="display: flex; gap: 12px; max-width: 500px;">
+              <input type="text" id="cnesInput" placeholder="Ex: 2269783" maxlength="7">
+              <button class="btn primary" id="btnScraper" onclick="runScraper()"><i class="ph ph-play"></i> Extrair Dados</button>
+            </div>
+            <p class="small" style="margin-top: 10px; color: var(--muted);">Verifique o terminal do Python para acompanhar o progresso do Chrome.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- MÓDULO 2: ETL SIGTAP -->
+      <section id="view-mod2" class="hidden">
+        <div class="card">
+          <div class="hd"><h3><i class="ph-fill ph-database"></i> Consolidação do Dicionário SIGTAP</h3></div>
+          <div class="bd">
+            <p style="margin-bottom: 20px;">O ETL processa os arquivos de texto posicionais da pasta <code>Dados_02_SIGTAP_Bruto</code> e gera um banco de dados unificado em Excel, resolvendo a Teoria dos Conjuntos da Regra Geral.</p>
+            <button class="btn primary" id="btnEtl" onclick="runEtl()"><i class="ph ph-arrows-clockwise"></i> Processar Arquivos TXT Datasus</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- MÓDULO 3: GERAR PERFIL -->
+      <section id="view-mod3" class="hidden">
+        <div class="card">
+          <div class="hd"><h3><i class="ph-fill ph-shield-check"></i> Cruzamento Relacional (Tabela Dourada)</h3></div>
+          <div class="bd">
+            <p style="margin-bottom: 20px;">Selecione um hospital já raspado. O motor cruzará a infraestrutura dele (Módulo 1) com as exigências do governo (Módulo 2) para gerar o Perfil Blindado de Permissões.</p>
+            <div style="display: flex; gap: 12px; max-width: 500px;">
+              <select id="selPerfilCnes"><option value="">Carregando hospitais...</option></select>
+              <button class="btn primary" id="btnPerfil" onclick="runPerfil()"><i class="ph ph-magic-wand"></i> Gerar Perfil</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MÓDULO 4: ETL SISAIH -->
+      <section id="view-mod4" class="hidden">
+        <div class="card">
+          <div class="hd"><h3><i class="ph-fill ph-arrow-down"></i> Importação de Remessa SISAIH (ETL)</h3></div>
+          <div class="bd">
+            <p style="margin-bottom: 20px;">Informe o número do CNES e selecione uma remessa TXT. O sistema converterá os dados posicionais para formato Excel estruturado, pronto para auditoria.</p>
+            <div style="display: flex; gap: 12px; max-width: 500px;">
+              <input type="text" id="cnesEtlSisaih" placeholder="Ex: 9491619" maxlength="7">
+              <button class="btn primary" id="btnEtlSisaih" onclick="runEtlSisaih()"><i class="ph ph-arrow-down"></i> Processar Remessa TXT</button>
+            </div>
+            <p class="small" style="margin-top: 10px; color: var(--muted);">Verifique a pasta <code>Dados_05A_Remessas_SISAIH_Brutas</code> para adicionar arquivos TXT.</p>
+            <div id="etlSisaihStatus" style="margin-top: 20px; display: none;">
+              <p><strong>Status do processamento:</strong></p>
+              <ul id="etlSisaihStatusList"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MÓDULO 4: DASHBOARD -->
+      <section id="view-dash" class="hidden">
+        <div class="card" style="margin-bottom: 24px; background: var(--blue-50);">
+          <div class="bd" style="display: flex; gap: 16px; align-items: center;">
+            <div style="flex: 1;">
+              <label style="font-size: 11px; font-weight: bold; color: var(--muted); text-transform: uppercase;">Hospital em Análise (Auditoria)</label>
+              <select id="selAuditoriaCnes" style="margin-top: 4px; border-color: var(--blue-300);"></select>
+            </div>
+            <button class="btn primary" onclick="runAuditoria()" id="btnAuditoria" style="margin-top: 16px;"><i class="ph ph-magnifying-glass"></i> Auditar Remessa TXT Local</button>
+          </div>
+          <div id="auditNotice" class="alert-box warn" style="margin-top: 16px;">
+            Atenção: primeiro execute o Módulo 4 - ETL SISAIH para gerar a planilha Excel necessária antes de auditar.
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="card"><div class="kpi danger"><div class="lbl">R1: Glosas Estruturais</div><div class="val" id="kR1">0</div></div></div>
+          <div class="card"><div class="kpi ok"><div class="lbl">R2: Oportunidades Upsell</div><div class="val" id="kR2">0</div></div></div>
+          <div class="card"><div class="kpi warn"><div class="lbl">R3: Limites de Quantidade</div><div class="val" id="kR3">0</div></div></div>
+          <div class="card"><div class="kpi purple"><div class="lbl">R4-R8: Outros Alertas</div><div class="val" id="kOutros">0</div></div></div>
+        </div>
+      </section>
+
+      <!-- MÓDULO 4: FILA AIH -->
+      <section id="view-aih" class="hidden">
+        <div class="card">
+          <div class="hd">
+            <h3><i class="ph-fill ph-files"></i> Tabela de Auditoria de AIHs</h3>
+            <div style="display: flex; gap: 10px; flex-wrap:wrap; align-items:center;">
+                <input type="text" id="qSearch" placeholder="Buscar AIH..." oninput="renderAih()" style="width: 200px; height: 32px;" />
+                <button class="btn primary" id="btnGerarRelatorio" onclick="gerarRelatorio()"><i class="ph ph-file-arrow-down"></i> Gerar Relatório Completo do Lote</button>
+            </div>
+          </div>
+          <div class="bd" style="padding:0;">
+            <div class="table-container">
+              <table id="aihTbl">
+                <thead><tr><th>Ident_AIH</th><th>Procedimento</th><th>CBO</th><th>Dias</th><th>Tags de Motor (As 8 Regras)</th><th>Ação</th></tr></thead>
+                <tbody><tr><td colspan="6" style="text-align:center; padding: 30px;">Inicie a auditoria na aba Visão Gerencial.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MOTOR DE REGRAS CONFIG -->
+      <section id="view-rules" class="hidden">
+        <div class="card">
+          <div class="hd"><h3><i class="ph-fill ph-cpu"></i> Regras Aplicadas pelo Python (Conforme PDF Oficial)</h3></div>
+          <div class="bd">
+            <div class="grid-2" id="rulesGrid"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL DE DETALHES DA AIH -->
+  <div class="modal-bk" id="modal">
+    <div class="modal">
+      <div class="hd">
+        <h3 id="mTitle">AIH</h3>
+        <button class="btn ghost" onclick="closeModal()">X</button>
+      </div>
+      <div class="bd" id="mBody"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><i class="ph-fill ph-info" id="toastIcon" style="font-size: 20px;"></i><span id="toastMsg"></span></div>
+
+  <script>
+    // Endereco do backend configuravel SEM editar o codigo.
+    // Prioridade: 1) ?api=... na URL (fica salvo p/ as proximas visitas)
+    //             2) valor salvo antes no navegador (localStorage)
+    //             3) padrao: backend local (localhost:8000)
+    const API_URL = (() => {
+      const fromQuery = new URLSearchParams(window.location.search).get('api');
+      if (fromQuery) {
+        localStorage.setItem('API_URL', fromQuery.replace(/\/+$/, ''));
+      }
+      const base = localStorage.getItem('API_URL') || 'http://localhost:8000';
+      return base.replace(/\/+$/, '') + '/api';
+    })();
+    console.log('[SisAIH] Usando backend em:', API_URL);
+    let AIHs = [];
+    let CNES = null;
+
+    function setAuditNotice(message, variant = 'warn') {
+      const el = document.getElementById('auditNotice');
+      if (!el) return;
+      if (!message) {
+        el.style.display = 'none';
+        return;
+      }
+      el.textContent = message;
+      el.className = `alert-box ${variant}`;
+      el.style.display = 'block';
+    }
+
+    // Definição Oficial das 8 Regras do PDF
+    const REGRAS = [
+      { cod: "R1", class: "r1", nome: "Glosa de Estrutura (Camada 2)", desc: "Verifica Habilitação, Serviço e Leito cruzando com o Módulo de Perfil." },
+      { cod: "R2", class: "r2", nome: "Upsell / Auditoria (Camada 8)", desc: "Sugere trocas vantajosas como Mamografia Bilateral baseada em histórico." },
+      { cod: "R3", class: "r3", nome: "Quantidade e Permanência (Camada 3)", desc: "Diferença Data Internação x Alta superior ao teto SIGTAP." },
+      { cod: "R4", class: "r4", nome: "UTI Oculta / Condicionais", desc: "CID de alta gravidade respiratória detectada sem diária cobrada." },
+      { cod: "R5", class: "r5", nome: "Validação de Sintaxe (Camada 1)", desc: "Módulo 11 de CNS e CPF. Validação de formato de CID-10 e Datas Lógicas." },
+      { cod: "R6", class: "r6", nome: "Compatibilidade Demográfica", desc: "Idade (Meses/Anos) e Sexo (M/F) exigidos pelo procedimento." },
+      { cod: "R7", class: "r7", nome: "Óbito sem DO (Camada 4)", desc: "Motivos de alta 41+ exigem o número da Declaração de Óbito preenchido." },
+      { cod: "R8", class: "r8", nome: "Causas Externas (Camada 5)", desc: "CIDs V, W, X, Y exigem dados do Acidente e CNPJ do Empregador." }
+    ];
+
+    async function atualizarListasHospitais() {
+      try {
+        const res = await fetch(`${API_URL}/hospitais`);
+        const data = await res.json();
+        let options = '<option value="">— Selecione um Hospital Extraído —</option>';
+        data.forEach(h => { options += `<option value="${h.cnes}">${h.cnes} — ${h.nome}</option>`; });
+        document.getElementById("selPerfilCnes").innerHTML = options;
+        document.getElementById("selAuditoriaCnes").innerHTML = options;
+      } catch (e) {
+        toast("Erro de conexão com FastAPI. Verifique o terminal.", "danger");
+      }
+    }
+
+    /* ================= AÇÕES DOS MÓDULOS ================= */
+    
+    async function runScraper() {
+      const cnes = document.getElementById("cnesInput").value;
+      if(cnes.length !== 7) return toast("CNES deve ter 7 dígitos.", "warning");
+      const btn = document.getElementById("btnScraper");
+      btn.disabled = true; btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Extraindo...';
+      try {
+        const res = await fetch(`${API_URL}/extrair_cnes`, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cnes: cnes })
+        });
+        const json = await res.json();
+        toast(json.status || "Iniciado com Sucesso", res.ok ? "success" : "danger");
+        atualizarListasHospitais();
+      } catch(e) { toast("Falha ao comunicar com API.", "danger"); }
+      btn.disabled = false; btn.innerHTML = '<i class="ph ph-play"></i> Extrair Dados';
+    }
+
+    async function runEtl() {
+      const btn = document.getElementById("btnEtl");
+      btn.disabled = true; btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Processando TXTs...';
+      try {
+        const res = await fetch(`${API_URL}/executar_etl`, { method: 'POST' });
+        const json = await res.json();
+        toast(json.msg || "Sucesso", res.ok ? "success" : "danger");
+      } catch(e) { toast("Este comando requer uso do terminal.", "warning"); }
+      btn.disabled = false; btn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> Processar Arquivos TXT Datasus';
+    }
+
+    async function runPerfil() {
+      const cnes = document.getElementById("selPerfilCnes").value;
+      if(!cnes) return toast("Selecione um CNES.", "warning");
+      const btn = document.getElementById("btnPerfil");
+      btn.disabled = true; btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Cruzando Tabelas...';
+      try {
+        const res = await fetch(`${API_URL}/executar_perfil/${cnes}`, { method: 'POST' });
+        const json = await res.json();
+        toast(json.msg || "Sucesso", res.ok ? "success" : "danger");
+      } catch(e) { toast("Este comando requer uso do terminal.", "warning"); }
+      btn.disabled = false; btn.innerHTML = '<i class="ph ph-magic-wand"></i> Gerar Perfil';
+    }
+
+    async function runEtlSisaih() {
+      const cnes = document.getElementById("cnesEtlSisaih").value;
+      if(!cnes || cnes.length !== 7) return toast("CNES deve ter 7 dígitos.", "warning");
+      const btn = document.getElementById("btnEtlSisaih");
+      btn.disabled = true; btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Convertendo TXT...';
+      
+      try {
+        const res = await fetch(`${API_URL}/etl_sisaih/${cnes}`, { method: 'POST' });
+        const json = await res.json();
+        
+        if (!res.ok) {
+          toast(json.detail || "Erro ao processar", "danger");
+        } else {
+          toast(json.msg || "ETL SISAIH concluído com sucesso!", "success");
+          
+          // Mostrar status do processamento
+          const statusDiv = document.getElementById("etlSisaihStatus");
+          const statusList = document.getElementById("etlSisaihStatusList");
+          statusList.innerHTML = "";
+          
+          if (json.arquivos_gerados && json.arquivos_gerados.length > 0) {
+            json.arquivos_gerados.forEach(f => {
+              const li = document.createElement("li");
+              li.textContent = f;
+              statusList.appendChild(li);
+            });
+          }
+          statusDiv.style.display = "block";
+          setAuditNotice('Remessa SISAIH importada com sucesso. Agora execute o Módulo 5 para auditar.', 'ok');
+        }
+      } catch(e) { toast("Erro de conexão: " + e.message, "danger"); }
+      
+      btn.disabled = false; btn.innerHTML = '<i class="ph ph-arrow-down"></i> Processar Remessa TXT';
+    }
+
+    async function runAuditoria() {
+      const cnes = document.getElementById("selAuditoriaCnes").value;
+      if(!cnes) return toast("Selecione um CNES.", "warning");
+      const btn = document.getElementById("btnAuditoria");
+      btn.disabled = true; btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Lendo Ficheiros...';
+      
+      try {
+        // Conexão com o novo Endpoint do FastAPI
+        const res = await fetch(`${API_URL}/dados?cnes=${cnes}`);
+        if(!res.ok) {
+           const err = await res.json();
+           throw new Error(err.detail);
+        }
+        
+        const data = await res.json();
+        CNES = data.hospital;
+        
+        // Mantém a estrutura nova do backend com procedimentos vinculados
+        AIHs = data.aihs_processadas.map(aih => {
+          // Coleta as tags/regras de todos os procedimentos
+          let regrasTags = new Set();
+          
+          aih.procedimentos.forEach(proc => {
+            if (proc.erros_detectados && proc.erros_detectados.length > 0) {
+              proc.erros_detectados.forEach(err => {
+                regrasTags.add(err.tipo);
+              });
+            }
+            if (proc.upsell_sugerido && proc.upsell_sugerido.length > 0) {
+              regrasTags.add('R2');
+            }
+          });
+          
+          // Se não houver erros, marca como OK
+          if (regrasTags.size === 0) {
+            regrasTags.add('OK');
+          }
+          
+          // Calcula dias de permanência
+          const parseAihDate = (value) => {
+            if (!value) return null;
+            const str = String(value).trim();
+            const digits = str.replace(/\D/g, '');
+            if (digits.length === 8) {
+              const year = Number(digits.slice(0, 4));
+              const month = Number(digits.slice(4, 6)) - 1;
+              const day = Number(digits.slice(6, 8));
+              const d = new Date(year, month, day);
+              return Number.isNaN(d.getTime()) ? null : d;
+            }
+            const d = new Date(str);
+            return Number.isNaN(d.getTime()) ? null : d;
+          };
+          
+          let dias = 'N/A';
+          const d1 = parseAihDate(aih.internacao.data);
+          const d2 = parseAihDate(aih.internacao.alta);
+          if (d1 && d2) {
+            dias = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+            if (dias < 0) dias = 0;
+          }
+          
+          const procPrinc = aih.procedimentos && aih.procedimentos.length > 0 ? aih.procedimentos[0] : null;
+          
+          return {
+            // Compatibilidade com código antigo
+            n: aih.id,
+            dias: dias,
+            regras: Array.from(regrasTags),
+            proc: procPrinc ? { cod: procPrinc.cod, nome: procPrinc.nome } : { cod: 'N/A', nome: 'N/A' },
+            valor: aih.valorTotal,
+            
+            // Estrutura nova (para o novo modal)
+            ...aih
+          };
+        });
+        
+        if(AIHs.length === 0) toast("Nenhuma AIH encontrada na base.", "warning");
+        else toast(`Auditoria Realizada! ${AIHs.length} AIHs processadas.`, "success");
+        
+        renderDash();
+        renderAih();
+      } catch(e) {
+        if (e.message && e.message.toLowerCase().includes('produção não encontrada')) {
+          setAuditNotice('Arquivo Excel não encontrado. Execute primeiro o Módulo 4 - ETL SISAIH.', 'danger');
+        } else {
+          setAuditNotice(e.message || 'Erro ao auditar. Verifique o Módulo 4.', 'danger');
+        }
+        toast(e.message, "danger");
+      }
+      
+      btn.disabled = false; btn.innerHTML = '<i class="ph ph-magnifying-glass"></i> Auditar Remessa TXT Local';
+    }
+
+    /* ================= RENDERIZADORES ================= */
+
+    function renderDash() {
+      document.getElementById("kR1").textContent = AIHs.filter(a => a.regras.includes("R1")).length;
+      document.getElementById("kR2").textContent = AIHs.filter(a => a.regras.includes("R2")).length;
+      document.getElementById("kR3").textContent = AIHs.filter(a => a.regras.includes("R3")).length;
+      document.getElementById("kOutros").textContent = AIHs.filter(a => a.regras.some(r => ["R4","R5","R6","R7","R8"].includes(r))).length;
+    }
+
+    function renderAih() {
+      const tb = document.querySelector("#aihTbl tbody"); 
+      tb.innerHTML = "";
+      const q = document.getElementById("qSearch").value.toLowerCase();
+      
+      const list = AIHs.filter(a => String(a.n).includes(q) || a.proc.cod.includes(q));
+      
+      if(list.length === 0) {
+          tb.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Nenhuma AIH visível.</td></tr>';
+          return;
+      }
+
+      list.forEach(a => {
+        let tagHtml = "";
+        a.regras.forEach(r => {
+            const rule = REGRAS.find(x => x.cod === r);
+            const cls = rule ? rule.class : (r === "OK" ? "ok" : "");
+            tagHtml += `<span class="tag ${cls}">${r}</span> `;
+        });
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><b>${a.n}</b></td>
+          <td>${a.proc.cod}<br><small style="color:var(--muted)">${a.proc.nome.substring(0, 30)}...</small></td>
+          <td>${a.cboLanc}</td>
+          <td>${a.dias}</td>
+          <td><div style="display:flex; gap:4px; flex-wrap:wrap;">${tagHtml}</div></td>
+          <td><button class="btn" onclick="openAih('${a.n}')">Detalhes</button></td>`;
+        tb.appendChild(tr);
+      });
+    }
+
+    function openAih(n) {
+      // n é o ID da AIH
+      const aih = AIHs.find(x => x.id == n);
+      if (!aih) return;
+      
+      document.getElementById('mTitle').textContent = `AIH ${aih.id}`;
+      
+      // Formata as datas para exibição
+      const formatDate = (dateStr) => {
+        if (!dateStr || dateStr.length !== 8) return dateStr;
+        return `${dateStr.substring(6,8)}/${dateStr.substring(4,6)}/${dateStr.substring(0,4)}`;
+      };
+      
+      // Cria a tabela de procedimentos
+      let procTableHtml = '<table style="width:100%; border-collapse:collapse; font-size:13px;"><thead>';
+      procTableHtml += '<tr style="background:#f0f0f0; border-bottom:2px solid #333;">';
+      procTableHtml += '<th style="padding:8px; text-align:left; font-weight:bold;">Seq</th>';
+      procTableHtml += '<th style="padding:8px; text-align:left; font-weight:bold;">Código</th>';
+      procTableHtml += '<th style="padding:8px; text-align:left; font-weight:bold;">Procedimento</th>';
+      procTableHtml += '<th style="padding:8px; text-align:center; font-weight:bold;">Qt</th>';
+      procTableHtml += '<th style="padding:8px; text-align:right; font-weight:bold;">Valor</th>';
+      procTableHtml += '<th style="padding:8px; text-align:center; font-weight:bold;">Status</th>';
+      procTableHtml += '</tr></thead><tbody>';
+      
+      aih.procedimentos.forEach((proc, idx) => {
+        const hasError = proc.erros_detectados && proc.erros_detectados.length > 0;
+        const hasUpsell = proc.upsell_sugerido && proc.upsell_sugerido.length > 0;
+        const icon = hasError ? '🔴' : (hasUpsell ? '🟢' : '');
+        
+        procTableHtml += `<tr class="proc-row" data-seq="${proc.seq}" style="border-bottom:1px solid #ddd; cursor:pointer; padding:4px; transition:all 0.2s;">`;
+        procTableHtml += `<td style="padding:8px;">${proc.seq}</td>`;
+        procTableHtml += `<td style="padding:8px; font-weight:bold;">${proc.cod}</td>`;
+        procTableHtml += `<td style="padding:8px;"><small>${proc.nome.substring(0,40)}</small></td>`;
+        procTableHtml += `<td style="padding:8px; text-align:center;">${proc.quantidade}</td>`;
+        procTableHtml += `<td style="padding:8px; text-align:right;">R$ ${proc.valor.toFixed(2)}</td>`;
+        procTableHtml += `<td style="padding:8px; text-align:center; font-size:16px;">${icon}</td>`;
+        procTableHtml += `</tr>`;
+      });
+      
+      procTableHtml += '</tbody></table>';
+      
+      // Renderiza o modal
+      document.getElementById("mBody").innerHTML = `
+        <div style="max-height: 80vh; overflow-y: auto; padding: 16px 0;">
+          
+          <!-- CABEÇALHO CLÍNICO -->
+          <div style="background: #f5f5f5; padding: 16px; margin-bottom: 16px; border-radius: 8px; border-left: 4px solid var(--teal);">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+              <div><span style="color: #666;">AIH:</span><b> ${aih.id}</b></div>
+              <div><span style="color: #666;">Prontuário:</span><b> ${aih.prontuario}</b></div>
+              <div><span style="color: #666;">Paciente:</span><b> ${aih.paciente.nome}</b></div>
+              <div><span style="color: #666;">Sexo:</span><b> ${aih.paciente.sexo}</b></div>
+              <div><span style="color: #666;">Nasc:</span><b> ${formatDate(aih.paciente.nascimento)}</b></div>
+              <div><span style="color: #666;">CNES:</span><b> ${CNES.cnes}</b></div>
+              <div><span style="color: #666;">Internação:</span><b> ${formatDate(aih.internacao.data)}</b></div>
+              <div><span style="color: #666;">Alta:</span><b> ${formatDate(aih.internacao.alta)}</b></div>
+              <div><span style="color: #666;">Motivo Saída:</span><b> ${aih.internacao.motivoAlta}</b></div>
+              <div><span style="color: #666;">CID Princ:</span><b> ${aih.cid_principal}</b></div>
+            </div>
+          </div>
+
+          <!-- TABELA DE PROCEDIMENTOS CLICÁVEL -->
+          <div style="background: white; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 16px;">
+            <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #333;">Procedimentos Realizados</h4>
+            ${procTableHtml}
+            <small style="color: #999; margin-top: 8px; display: block;">Clique em uma linha para ver os detalhes</small>
+          </div>
+
+          <!-- PAINEL DINÂMICO DO AUDITOR -->
+          <div id="painelAuditor" style="background: var(--blue-50); padding: 16px; border-radius: 8px; border: 1px solid var(--blue-200); min-height: 120px;">
+            <p style="color: #666; font-style: italic;">Selecione um procedimento para visualizar os apontamentos e sugestões.</p>
+          </div>
+
+          <!-- BOTÃO DE GERAR RELATÓRIO -->
+          <div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn primary" id="btnGerarRelatorio" onclick="gerarRelatorio()"><i class="ph ph-file-arrow-down"></i> Gerar Relatório Completo do Lote</button>
+          </div>
+        </div>
+      `;
+      
+      // Atualiza o estado da AIH global para o botão de relatório
+      window.aihAtual = aih;
+      
+      // Adiciona eventos de clique nas linhas da tabela
+      setTimeout(() => {
+        document.querySelectorAll('.proc-row').forEach(row => {
+          row.addEventListener('click', function() {
+            const seq = this.dataset.seq;
+            updatePainelAuditor(aih, parseInt(seq));
+            // Destaca a linha selecionada
+            document.querySelectorAll('.proc-row').forEach(r => r.style.background = 'white');
+            this.style.background = '#e8f4f8';
+          });
+        });
+        // Seleciona o primeiro procedimento por padrão
+        if (aih.procedimentos.length > 0) {
+          const primeiraLinha = document.querySelector('.proc-row');
+          if (primeiraLinha) primeiraLinha.click();
+        }
+      }, 0);
+      
+      document.getElementById("modal").classList.add("on");
+    }
+
+    function updatePainelAuditor(aih, seqProcedimento) {
+      const proc = aih.procedimentos.find(p => p.seq === seqProcedimento);
+      if (!proc) return;
+      
+      let conteudo = `
+        <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--blue-900);">
+          ${proc.principal ? '📌' : '○'} PROCEDIMENTO: ${proc.cod} - ${proc.nome}
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px; margin-bottom: 12px;">
+          <div><span style="color: #666;">Valor:</span><b> R$ ${proc.valor.toFixed(2)}</b></div>
+          <div><span style="color: #666;">Quantidade:</span><b> ${proc.quantidade}</b></div>
+          <div><span style="color: #666;">CBO:</span><b> ${proc.cbo}</b></div>
+          <div><span style="color: #666;">Principal:</span><b> ${proc.principal ? 'Sim' : 'Não'}</b></div>
+        </div>
+      `;
+      
+      // Erros detectados
+      if (proc.erros_detectados && proc.erros_detectados.length > 0) {
+        conteudo += `
+          <div style="background: #fee; padding: 12px; border-radius: 6px; border-left: 4px solid var(--danger); margin-bottom: 12px;">
+            <b style="color: var(--danger);">🔴 Apontamentos Encontrados:</b>
+            <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+        `;
+        proc.erros_detectados.forEach(err => {
+          conteudo += `<li><span style="color: #666;"><b>[${err.tipo}]</b> ${err.mensagem}</span></li>`;
+        });
+        conteudo += `</ul></div>`;
+      } else {
+        conteudo += `<div style="background: #efe; padding: 12px; border-radius: 6px; border-left: 4px solid var(--ok); margin-bottom: 12px;"><b style="color: var(--ok);">✓ Sem apontamentos estruturais</b></div>`;
+      }
+      
+      // Sugestões de Upsell
+      if (proc.upsell_sugerido && proc.upsell_sugerido.length > 0) {
+        conteudo += `
+          <div style="background: #fef3cd; padding: 12px; border-radius: 6px; border-left: 4px solid var(--warn); margin-bottom: 12px;">
+            <b style="color: #856404;">💡 Oportunidades de Auditoria (Upsell):</b>
+            <div style="margin-top: 8px;">
+        `;
+        proc.upsell_sugerido.forEach(sugestao => {
+          conteudo += `
+            <div style="background: white; padding: 10px; border-radius: 4px; margin-bottom: 8px;">
+              <div><b>${sugestao.cod_procedimento} - ${sugestao.nome_procedimento}</b></div>
+              <div style="font-size: 12px; color: #666;">
+                Valor: R$ ${sugestao.valor_novo.toFixed(2)} (+ R$ ${sugestao.diferenca.toFixed(2)})
+              </div>
+              <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                <i>${sugestao.motivo}</i>
+              </div>
+              <div style="margin-top: 6px;">
+                <button class="btn" style="font-size: 12px; padding: 4px 8px;" onclick="aplicarSugestao('${sugestao.cod_procedimento}', ${sugestao.diferenca})">
+                  ✓ Aplicar Sugestão
+                </button>
+              </div>
+            </div>
+          `;
+        });
+        conteudo += `</div></div>`;
+      }
+      
+      document.getElementById('painelAuditor').innerHTML = conteudo;
+    }
+
+    function aplicarSugestao(novoCod, diferenca) {
+      // Placeholder para futura implementação
+      toast(`Sugestão para aplicar: ${novoCod} (+ R$ ${diferenca.toFixed(2)})`, 'info');
+    }
+
+    function closeModal() { document.getElementById("modal").classList.remove("on"); }
+
+    async function gerarRelatorio() {
+      const cnes = CNES && CNES.cnes ? CNES.cnes : null;
+      if(!cnes) return toast('CNES não definido. Execute a auditoria primeiro.', 'warning');
+      const buttons = Array.from(document.querySelectorAll('#btnGerarRelatorio'));
+      buttons.forEach(btn => { btn.disabled = true; btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Gerando...'; });
+      try {
+        const linhasComApontamento = AIHs.filter(aih => {
+          if (!aih || !Array.isArray(aih.procedimentos)) return false;
+          return aih.procedimentos.some(proc =>
+            (proc.erros_detectados && proc.erros_detectados.length > 0) ||
+            (proc.upsell_sugerido && proc.upsell_sugerido.length > 0)
+          );
+        });
+
+        if (linhasComApontamento.length === 0) {
+          throw new Error('Nenhum apontamento encontrado na tabela de auditoria.');
+        }
+
+        const payload = {
+          cnes,
+          lote: 'TabelaAuditoria',
+          aihs: linhasComApontamento
+        };
+
+        const res = await fetch(`${API_URL}/gerar_relatorio`, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+
+        if(!res.ok) {
+          const j = await res.json().catch(()=>null);
+          throw new Error(j && j.detail ? j.detail : (j && j.msg ? j.msg : 'Erro ao gerar relatório'));
+        }
+
+        const blob = await res.blob();
+        const ct = res.headers.get('content-type') || '';
+        if(ct.includes('application/json')){
+          const txt = await blob.text();
+          const j = JSON.parse(txt || '{}');
+          toast(j.msg || j.detail || 'Nenhum relatório gerado', 'info');
+        } else {
+          const cd = res.headers.get('content-disposition') || '';
+          let filename = 'Relatorio_Auditoria.pdf';
+          const m = cd.match(/filename\*?=\s*(?:UTF-8''|"?)([^;"\n]+)/i);
+          if(m && m[1]) filename = decodeURIComponent(m[1].replace(/"/g, ''));
+          const url = URL.createObjectURL(blob);
+          const ael = document.createElement('a'); ael.href = url; ael.download = filename; document.body.appendChild(ael); ael.click(); ael.remove(); URL.revokeObjectURL(url);
+          toast('Relatório gerado e baixado.', 'success');
+        }
+      } catch(e) { toast(e.message || e, 'danger'); }
+      buttons.forEach(btn => { btn.disabled = false; btn.innerHTML = '<i class="ph ph-file-arrow-down"></i> Gerar Relatório Completo do Lote'; });
+    }
+
+    function renderRulesPage() {
+        const grid = document.getElementById("rulesGrid");
+        grid.innerHTML = "";
+        REGRAS.forEach(r => {
+            grid.innerHTML += `
+            <div class="rule-item">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <span class="tag ${r.class}">${r.cod}</span>
+                    <b style="color:var(--blue-900); font-size:15px;">${r.nome}</b>
+                </div>
+                <p style="margin:0; font-size:13px; color:var(--muted); line-height:1.5;">${r.desc}</p>
+            </div>`;
+        });
+    }
+
+    /* ================= NAVEGAÇÃO SPA ================= */
+    function go(view) {
+      document.querySelectorAll("main > section").forEach(s => s.classList.add("hidden"));
+      document.getElementById("view-" + view).classList.remove("hidden");
+      document.querySelectorAll("#nav button").forEach(b => b.classList.remove("active"));
+      document.querySelector(`#nav button[data-view="${view}"]`).classList.add("active");
+      
+      const titles = {
+          mod1: "Módulo 1: Extração Estrutural (CNES)",
+          mod2: "Módulo 2: Processamento Datasus (ETL)",
+          mod3: "Módulo 3: Inteligência e Perfil",
+          mod4: "Módulo 4: Importação de Remessa (ETL SISAIH)",
+          dash: "Módulo 5: Auditoria - Visão Gerencial",
+          aih:  "Módulo 5: Auditoria - Relatório Detalhado",
+          rules:"Motor Baseado no Documento Oficial"
+      };
+      document.getElementById("title").textContent = titles[view];
+      if (view === "aih") renderAih();
+    }
+
+    document.getElementById("nav").addEventListener("click", e => {
+      const b = e.target.closest("button");
+      if(b) go(b.dataset.view);
+    });
+
+    function toast(msg, type = "info") { 
+        const t = document.getElementById("toast"); 
+        document.getElementById("toastMsg").textContent = msg; 
+        t.style.background = type === 'success' ? 'var(--ok)' : (type === 'danger' ? 'var(--danger)' : 'var(--blue-900)');
+        t.classList.add("on"); 
+        clearTimeout(window._tt); 
+        window._tt = setTimeout(() => t.classList.remove("on"), 3000); 
+    }
+
+    // Inicialização
+    atualizarListasHospitais();
+    renderRulesPage();
+  </script>
+</body>
+</html>
