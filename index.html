@@ -521,9 +521,14 @@
 
     function openAih(n) {
       // n é o ID da AIH
-      const aih = AIHs.find(x => x.id == n);
-      if (!aih) return;
-      
+      const aih = AIHs.find(x => String(x.id) == String(n) || String(x.n) == String(n));
+      if (!aih) { toast('AIH não encontrada: ' + n, 'danger'); return; }
+
+      // Abre o modal IMEDIATAMENTE, antes de montar o conteudo.
+      // Assim, se algum dado vier incompleto, o modal ainda abre e o erro fica visivel.
+      document.getElementById("modal").classList.add("on");
+
+      try {
       document.getElementById('mTitle').textContent = `AIH ${aih.id}`;
       
       // Formata as datas para exibição
@@ -551,9 +556,9 @@
         procTableHtml += `<tr class="proc-row" data-seq="${proc.seq}" style="border-bottom:1px solid #ddd; cursor:pointer; padding:4px; transition:all 0.2s;">`;
         procTableHtml += `<td style="padding:8px;">${proc.seq}</td>`;
         procTableHtml += `<td style="padding:8px; font-weight:bold;">${proc.cod}</td>`;
-        procTableHtml += `<td style="padding:8px;"><small>${proc.nome.substring(0,40)}</small></td>`;
+        procTableHtml += `<td style="padding:8px;"><small>${String(proc.nome || '').substring(0,40)}</small></td>`;
         procTableHtml += `<td style="padding:8px; text-align:center;">${proc.quantidade}</td>`;
-        procTableHtml += `<td style="padding:8px; text-align:right;">R$ ${proc.valor.toFixed(2)}</td>`;
+        procTableHtml += `<td style="padding:8px; text-align:right;">R$ ${Number(proc.valor || 0).toFixed(2)}</td>`;
         procTableHtml += `<td style="padding:8px; text-align:center; font-size:16px;">${icon}</td>`;
         procTableHtml += `</tr>`;
       });
@@ -569,10 +574,10 @@
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
               <div><span style="color: #666;">AIH:</span><b> ${aih.id}</b></div>
               <div><span style="color: #666;">Prontuário:</span><b> ${aih.prontuario}</b></div>
-              <div><span style="color: #666;">Paciente:</span><b> ${aih.paciente.nome}</b></div>
-              <div><span style="color: #666;">Sexo:</span><b> ${aih.paciente.sexo}</b></div>
-              <div><span style="color: #666;">Nasc:</span><b> ${formatDate(aih.paciente.nascimento)}</b></div>
-              <div><span style="color: #666;">CNES:</span><b> ${CNES.cnes}</b></div>
+              <div><span style="color: #666;">Paciente:</span><b> ${(aih.paciente && aih.paciente.nome) || '-'}</b></div>
+              <div><span style="color: #666;">Sexo:</span><b> ${(aih.paciente && aih.paciente.sexo) || '-'}</b></div>
+              <div><span style="color: #666;">Nasc:</span><b> ${formatDate(aih.paciente && aih.paciente.nascimento)}</b></div>
+              <div><span style="color: #666;">CNES:</span><b> ${(CNES && CNES.cnes) || '-'}</b></div>
               <div><span style="color: #666;">Internação:</span><b> ${formatDate(aih.internacao.data)}</b></div>
               <div><span style="color: #666;">Alta:</span><b> ${formatDate(aih.internacao.alta)}</b></div>
               <div><span style="color: #666;">Motivo Saída:</span><b> ${aih.internacao.motivoAlta}</b></div>
@@ -619,8 +624,10 @@
           if (primeiraLinha) primeiraLinha.click();
         }
       }, 0);
-      
-      document.getElementById("modal").classList.add("on");
+      } catch (e) {
+        console.error('Erro ao montar os detalhes da AIH:', e);
+        toast('Erro ao exibir detalhes: ' + e.message, 'danger');
+      }
     }
 
     function updatePainelAuditor(aih, seqProcedimento) {
